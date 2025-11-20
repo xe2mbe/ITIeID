@@ -1,0 +1,17 @@
+# Usamos Ubuntu como imagen base
+FROM ubuntu:latest
+
+# Etiqueta con información del mantenedor
+LABEL maintainer="Eliud Bueno Moreno <xe2ebm@homtail.com>"
+
+# Actualizamos el sistema y luego instalamos Apache
+RUN apt-get update && apt-get install -y apache2
+
+# Copiamos el contenido de nuestro sitio web al directorio de Apache
+COPY ./www/ /var/www/html/
+
+# Exponemos el puerto 80 para acceder al servidor web
+EXPOSE 80
+
+# Arrancamos Apache en primer plano para que el contenedor no se detenga
+CMD ["apachectl", "-D", "FOREGROUND"]
