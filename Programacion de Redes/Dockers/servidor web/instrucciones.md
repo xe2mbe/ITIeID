@@ -60,9 +60,13 @@ Coloca esto dentro de `www/index.html`:
     <img src="images/ejemplo.png" alt="Imagen local">
 </body>
 </html>
+```
 
-🐳 Archivo: Dockerfile
+## 🐳 Archivo: Dockerfile
 
+Genera el archivo dockerfile en la raiz de tu proyecto:
+
+```html
 # Imagen base (Ubuntu)
 FROM ubuntu:latest
 
@@ -81,57 +85,59 @@ EXPOSE 80
 # Ejecutamos Apache en primer plano
 CMD ["apachectl", "-D", "FOREGROUND"]
 
-🛠 1. Construir la imagen Docker
+```
+
+## 🛠 1. Construir la imagen Docker
 
 Ejecuta esto dentro de la carpeta del proyecto:
-
+```bash
 docker build -t "mi-servidor-web" .
-
-🧪 EJERCICIO 1 — Ejecutar el contenedor SIN volumen
+```
+---
+# 🧪 EJERCICIO 1 — Ejecutar el contenedor SIN volumen
 
 En este modo, el contenedor usa su propia copia interna del sitio web.
 Cambiar los archivos en la carpeta www/ NO modifica lo que se ve en el navegador.
 
 Ejecuta:
-
+```bash
 docker run -d -p 8080:80 --name "server1" "mi-servidor-web"
-
-🌐 Prueba en el navegador:
+```
+## 🌐 Prueba en el navegador:
 
 http://localhost:8080
-✔ Verifica:
+### ✔ Verifica: 
+Si editas www/index.html NO se reflejan cambios en el navegador.
+Este contenedor se comporta como un servidor en producción.
 
-    Si editas www/index.html NO se reflejan cambios en el navegador.
-
-    Este contenedor se comporta como un servidor en producción.
-
-🧪 EJERCICIO 2 — Ejecutar el contenedor CON volumen
+# 🧪 EJERCICIO 2 — Ejecutar el contenedor CON volumen
 
 Ahora usaremos un volumen para enlazar tu carpeta local con la del contenedor.
 
 💥 IMPORTANTE: Debido a que tu ruta contiene espacios, USA COMILLAS.
-
+```bash
 docker run -d -p 8081:80 \
   -v "$(pwd)/www:/var/www/html" \
   --name "server2" "mi-servidor-web"
-
-🌐 Prueba en el navegador:
+```
+## 🌐 Prueba en el navegador:
 
 http://localhost:8081
-✔ Verifica:
+### ✔ Verifica:
 
-    Edita www/index.html → Actualiza en caliente sin reiniciar Docker.
-
-    Cambia una imagen en www/images/ejemplo.png → Cambia en el navegador.
-
-    Agrega nuevas páginas → Se generan automáticamente.
+Edita www/index.html → Actualiza en caliente sin reiniciar Docker.
+Cambia una imagen en www/images/ejemplo.png → Cambia en el navegador.
+Agrega nuevas páginas → Se generan automáticamente.
 
 Este es el modo ideal para desarrollo.
-🔍 Diferencia entre ambos modos
-Modo	Usa archivos internos	Refleja cambios locales	Ideal para
-Sin volumen	✔ Sí	❌ No	Producción
-Con volumen	❌ No	✔ Sí	Desarrollo
-🧹 Limpiar contenedores al final
+## 🔍 Diferencia entre ambos modos
+Modo	            Usa archivos internos	Refleja cambios locales	Ideal para
+Sin volumen	            ✔ Sí	              ❌  No	Producción
+Con volumen	            ❌ No	            ✔ Sí	Desarrollo
 
+## 🧹 Limpiar contenedores al final
+```bash
 docker stop "server1" "server2"
 docker rm "server1" "server2"
+```
+
