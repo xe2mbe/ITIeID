@@ -324,6 +324,7 @@ $db->close();
 
 ## 🚀 Ejecución de la práctica
 
+### 1️⃣ Entrar a la carpeta del proyecto
 Ojo: la carpeta se llama servidor web (con espacio). Usa comillas o escapa el espacio.
 
 1. Entrar a la carpeta del proyecto
@@ -347,82 +348,423 @@ cd "servidor web"
 ```bash
 mkdir -p data
 ```
+### 2️⃣ Crear la carpeta para la base de datos **con permisos**
 
-3. Levantar el contenedor con Docker Compose
+Como la base de datos `users.db` se va a guardar en un volumen (`./data:/var/www/data`),  
+es importante que la carpeta `data` tenga permisos de escritura para el proceso de Apache/PHP.
 
 ```bash
-docker-compose up --build
+mkdir -p data
+sudo chmod 777 data
 ```
 
-4. Probar en el navegador
+> En un entorno real no usarías `777`, pero para la práctica es perfecto y evita problemas de permisos con el volumen.
+
+### 3️⃣ Levantar el contenedor con Docker Compose (primer plano)
+
+```bash
+sudo docker-compose up --build
+```
+
+- `--build` fuerza a construir la imagen a partir del `Dockerfile`.
+- Deja este comando corriendo; verás los logs de Apache y PHP.
+
+### 4️⃣ Probar en el navegador
+
+Abre tu navegador y entra a:
 
 ```text
 http://localhost:8080
 ```
 
-Usuario: admin
-Contraseña: 1234
+Credenciales de prueba:
 
-5. Detener y limpiar
+- Usuario: `admin`  
+- Contraseña: `1234`
+
+Si el login es correcto, verás la página de bienvenida con los pasos de la práctica.  
+Si ves un error de **“Unable to open database: unable to open database file”**, revisa que:
+
+- La carpeta `data` exista.
+- Tenga permisos: `ls -ld data`
+- Si es necesario, vuelve a aplicar:
 
 ```bash
-# Detener
-CTRL + C
+sudo chmod 777 data
+sudo docker-compose down
+sudo docker-compose up --build
+```
 
-# Bajar servicio y red
-docker-compose down
+### 5️⃣ Detener y limpiar (cuando estás en primer plano)
+
+Para detener el servicio:
+
+```bash
+# En la misma terminal donde corre docker-compose
+CTRL + C
+```
+
+Para bajar contenedores y red:
+
+```bash
+sudo docker-compose down
 ```
 
 ---
 
-## 🔍 Explicación de conceptos clave
+### 🔎 Nota importante sobre el comando `sqlite3`
 
-### Imagen vs contenedor
+Para revisar o modificar la base de datos `users.db` puedes hacerlo de **dos maneras**:
 
-- Imagen: plantilla/receta con Apache, PHP, soporte SQLite y archivos iniciales.
-- Contenedor: instancia en ejecución de esa imagen.
+#### Opción A: usar `sqlite3` dentro del contenedor (recomendado)
 
-### Puertos
+1. Ver el nombre del contenedor:
 
-```yaml
-ports:
-  - "8080:80"
+```bash
+sudo docker ps
 ```
 
-- El contenedor escucha en el puerto 80 (Apache).
-- Tú entras por el puerto 8080 del host → http://localhost:8080
+2. Entrar al contenedor (el nombre puede ser `apache_login_sqlite`):
 
-### Volúmenes
-
-```yaml
-volumes:
-  - ./www:/var/www/html
-  - ./data:/var/www/data
+```bash
+sudo docker exec -it apache_login_sqlite bash
 ```
 
-- ./www:/var/www/html → código HTML/PHP visible y editable desde el host.
-- ./data:/var/www/data → base de datos users.db persistente en el host.
+3. Dentro del contenedor, abrir la base de datos:
 
-### ¿Dónde corre SQLite?
+```bash
+sqlite3 /var/www/data/users.db
+```
 
-- El código que ejecuta consultas (SQLite3 en PHP) corre dentro del contenedor.
-- El archivo users.db se almacena en el host gracias al volumen ./data:/var/www/data.
+4. Ya en la consola de `sqlite3`, puedes ejecutar:
 
-Puedes inspeccionar la base:
+```sql
+.tables
+SELECT * FROM users;
+INSERT INTO users (username, password) VALUES ('alumno1', 'passwd1');
+SELECT * FROM users;
+.exit
+```
+
+Luego sales del contenedor con:
+
+```bash
+exit
+```
+
+#### Opción B: usar `sqlite3` en el host
+
+Si prefieres usar `sqlite3` directamente en tu máquina (host), primero debes instalarlo:
+
+```bash
+sudo apt update
+sudo apt install sqlite3
+```
+
+Después, desde la carpeta del proyecto:
 
 ```bash
 cd "servidor web"
+sqlite3 data/users.db
+```
+
+Y ahí puedes usar los mismos comandos SQL:
+
+```sql
+.tables
+INSERT INTO users (username, password) VALUES ('alumno1', 'passwd1');
+SELECT * FROM users;
+.exit
+```
+
+> Si al ejecutar `sqlite3` en el host te aparece el mensaje  
+> `Command 'sqlite3' not found, but can be installed with: sudo apt install sqlite3`,  
+> significa que debes instalarlo (Opción B) o usar la Opción A dentro del contenedor.
+
+---
+
+## 🧪 Actividad extra: Agregar otro usuario y comprobar la persistencia
+
+En esta actividad vas a:
+
+1. Agregar un nuevo usuario directamente en la base de datos SQLite usando comandos SQL.
+2. Comprobar que el usuario puede hacer login.
+3. Bajar el contenedor y volverlo a levantar.
+4. Ver que el usuario **sigue existiendo** gracias al volumen `./data`.
+
+### 1️⃣ Agregar un nuevo usuario en SQLite
+
+Asegúrate de que la práctica ya se ejecutó al menos una vez y que se creó el archivo `users.db`.
+
+Desde la carpeta del proyecto:
+
+```bash
+cd "servidor web"
+ls data
+```
+
+Deberías ver:
+
+```text
+users.db
+```
+
+Ahora entra a la base de datos:
+
+- Opción A: dentro del contenedor (`sqlite3 /var/www/data/users.db`)
+- Opción B: en el host (`sqlite3 data/users.db`)
+
+Dentro de `sqlite3`, ejecuta:
+
+```sql
+.tables
+SELECT * FROM users;
+INSERT INTO users (username, password) VALUES ('alumno1', 'passwd1');
+SELECT * FROM users;
+.exit
+```
+
+### 2️⃣ Probar el nuevo usuario en el login
+
+Ve al navegador y entra a:
+
+```text
+http://localhost:8080
+```
+
+Haz login con:
+
+- Usuario: `alumno1`
+- Contraseña: `passwd1`
+
+Si todo está bien, deberías ver la misma página de bienvenida, pero con:
+
+```text
+¡Bienvenido, alumno1!
+```
+
+### 3️⃣ Comprobar la persistencia al bajar el contenedor
+
+Ahora vamos a demostrar que los datos **no se pierden** cuando se baja el contenedor, gracias al volumen `./data`.
+
+En la terminal donde está corriendo Docker Compose, detén el servicio con:
+
+```bash
+CTRL + C
+```
+
+Luego baja el proyecto:
+
+```bash
+sudo docker-compose down
+```
+
+Confirma que no hay contenedores del proyecto:
+
+```bash
+sudo docker-compose ps
+```
+
+La base de datos sigue en el host:
+
+```bash
+ls data
+```
+
+Deberías seguir viendo `users.db`.
+
+### 4️⃣ Volver a levantar el contenedor y probar otra vez
+
+Levanta de nuevo el servicio en **primer plano**:
+
+```bash
+sudo docker-compose up --build
+```
+
+Cuando esté arriba, vuelve al navegador:
+
+```text
+http://localhost:8080
+```
+
+Haz login otra vez con:
+
+- Usuario: `alumno1`
+- Contraseña: `passwd1`
+
+✅ Si puedes iniciar sesión, significa que:
+
+- El archivo `users.db` se quedó guardado en la carpeta `data` del **host**.
+- Al recrear el contenedor, se volvió a montar el volumen `./data:/var/www/data`.
+- Los datos **persisten** incluso cuando el contenedor se destruye.
+
+> Este es justamente el beneficio de usar volúmenes:  
+> **contenedores efímeros, datos persistentes**.
+
+### 5️⃣ Levantar el servicio en segundo plano (modo “detached”)
+
+Hasta ahora hemos usado:
+
+```bash
+sudo docker-compose up --build
+```
+
+que deja el servicio corriendo **en primer plano** (vemos los logs en la terminal).
+
+Ahora vamos a levantar el servicio en **segundo plano** usando la opción `-d` (detached):
+
+```bash
+sudo docker-compose up -d
+```
+
+1. Ejecuta:
+
+```bash
+sudo docker-compose up -d
+```
+
+2. Verifica que el contenedor está arriba:
+
+```bash
+sudo docker-compose ps
+```
+
+3. Entra al navegador:
+
+```text
+http://localhost:8080
+```
+
+4. Haz login con el usuario que creaste (por ejemplo, `alumno1 / passwd1`) y confirma que sigue funcionando.
+
+Para detener el servicio cuando está en segundo plano:
+
+```bash
+sudo docker-compose down
+```
+
+> Comenta con el grupo la diferencia entre levantar el servicio en primer plano  
+> (`up` normal) y en segundo plano (`up -d`).
+
+---
+
+### 6️⃣ Eliminar el contenedor y comprobar de nuevo la persistencia
+
+Hasta ahora has visto que los datos persisten aunque se baje el servicio con:
+
+```bash
+sudo docker-compose down
+```
+
+Ahora vamos a ser más explícitos y eliminar el contenedor, verificando que la base de datos sigue intacta.
+
+1. Asegúrate de que el servicio está levantado (puede ser en modo detached):
+
+```bash
+sudo docker-compose up -d
+```
+
+2. Verifica el estado del contenedor:
+
+```bash
+sudo docker-compose ps
+```
+
+Deberías ver algo como:
+
+```text
+      Name               Command               State           Ports
+----------------------------------------------------------------------------
+apache_login_sqlite   docker-php-entrypoi…     Up      0.0.0.0:8080->80/tcp
+```
+
+3. Baja el servicio y elimina el contenedor con:
+
+```bash
+sudo docker-compose down
+```
+
+> `docker-compose down` detiene y elimina el contenedor y la red del proyecto,
+> pero **NO borra** la carpeta `data/` ni el archivo `users.db` del host.
+
+4. Comprueba que el contenedor ya no existe:
+
+```bash
+sudo docker-compose ps
+```
+
+Deberías ver la tabla vacía (sin servicios).
+
+5. Revisa que la base de datos sigue en el host:
+
+```bash
+ls data
+```
+
+Deberías seguir viendo:
+
+```text
+users.db
+```
+
+Si quieres, incluso puedes abrirla:
+
+```bash
 sqlite3 data/users.db
 .tables
 SELECT * FROM users;
 .exit
 ```
 
+y ver que los usuarios (incluyendo `alumno1`) siguen ahí.
+
+6. Levanta de nuevo el servicio (puede ser en segundo plano):
+
+```bash
+sudo docker-compose up -d
+```
+
+7. Entra otra vez al navegador:
+
+```text
+http://localhost:8080
+```
+
+Haz login con:
+
+- Usuario: `alumno1`
+- Contraseña: `passwd1`
+
+✅ Aunque el contenedor anterior fue eliminado, los datos persisten porque:
+
+- El archivo `users.db` vive en la carpeta `data/` del **host**.
+- Al crear un contenedor nuevo, `docker-compose` vuelve a montar el volumen `./data:/var/www/data` y reutiliza la misma base de datos.
+
+> Idea clave: **contenedores desechables, datos persistentes** gracias a los volúmenes.
+
 ---
 
-## 🧪 Actividades sugeridas
+## 📋 Comandos de repaso
 
-1. Editar HTML en caliente
-2. Explorar la base de datos con sqlite3
-3. Agregar un nuevo usuario (alumno1 / passwd1)
-4. Discutir imagen vs contenedor vs volumen
+```bash
+# Ver contenedores activos
+docker ps
+
+# Ver contenedores activos y detenidos
+docker ps -a
+
+# Levantar servicio en primer plano (viendo logs)
+sudo docker-compose up --build
+
+# Levantar servicio en segundo plano (detached)
+sudo docker-compose up -d
+
+# Ver estado de los servicios del compose actual
+sudo docker-compose ps
+
+# Detener (en la misma terminal si está en primer plano)
+CTRL + C
+
+# Bajar servicio y red (tanto si estaba en primer o segundo plano)
+sudo docker-compose down
+```
