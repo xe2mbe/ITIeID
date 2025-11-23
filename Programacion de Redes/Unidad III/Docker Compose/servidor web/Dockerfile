@@ -1,10 +1,10 @@
 # Imagen base con Apache + PHP
 FROM php:8.2-apache
 
-# Instalamos soporte para SQLite3 en PHP
+# Instalamos la herramienta sqlite3 (para poder revisar la BD desde consola si hace falta)
+# La extensión SQLite3 de PHP ya viene incluida en esta imagen.
 RUN apt-get update && \
-    apt-get install -y libsqlite3-dev && \
-    docker-php-ext-install sqlite3 && \
+    apt-get install -y sqlite3 && \
     rm -rf /var/lib/apt/lists/*
 
 # Activamos el módulo rewrite por si luego lo quieres usar
@@ -17,7 +17,7 @@ COPY ./www /var/www/html
 # Directorio donde guardaremos la base de datos
 RUN mkdir -p /var/www/data
 
-# Damos permisos básicos (para demo; en producción habría que afinar)
+# Damos permisos básicos (para demo)
 RUN chown -R www-data:www-data /var/www
 
 # Apache escucha en el puerto 80 (por defecto)

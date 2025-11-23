@@ -55,7 +55,7 @@ $user = $result->fetchArray(SQLITE3_ASSOC);
 
 $db->close();
 
-// Generamos la respuesta HTML "a la vieja escuela"
+// Generamos la respuesta HTML
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -88,6 +88,7 @@ $db->close();
         }
         ol {
             margin-top: 10px;
+            text-align: left;
         }
         a {
             display: inline-block;
