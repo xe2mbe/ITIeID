@@ -1,0 +1,19 @@
+version: "3.9"  # Versión del formato de docker-compose
+
+services:
+  web:
+    # Construimos la imagen usando el Dockerfile en este mismo directorio
+    build: .
+    container_name: apache_login_sqlite
+
+    # Exponemos el puerto 80 del contenedor hacia el 8080 del host
+    # Así accedemos en el navegador con: http://localhost:8080
+    ports:
+      - "8080:80"
+
+    # Volúmenes:
+    # 1) ./www  -> /var/www/html  : HTML y PHP accesibles desde fuera
+    # 2) ./data -> /var/www/data  : base de datos SQLite persistente y visible
+    volumes:
+      - ./www:/var/www/html
+      - ./data:/var/www/data

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login con SQLite (Docker + Apache)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+        .contenedor {
+            width: 320px;
+            margin: 60px auto;
+            padding: 20px;
+            border: 1px solid #cccccc;
+            background-color: #ffffff;
+        }
+        h1 {
+            font-size: 18px;
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        input {
+            width: 95%;
+            padding: 5px;
+            margin-top: 3px;
+        }
+        button {
+            width: 100%;
+            margin-top: 15px;
+            padding: 8px;
+        }
+        .info {
+            font-size: 12px;
+            color: #555555;
+        }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h1>Login de práctica</h1>
+
+        <p class="info">
+            Usuario de prueba: <b>admin</b><br>
+            Contraseña de prueba: <b>1234</b>
+        </p>
+
+        <form method="post" action="login.php">
+            <label for="username">Usuario:</label>
+            <input type="text" name="username" id="username">
+
+            <label for="password">Contraseña:</label>
+            <input type="password" name="password" id="password">
+
+            <button type="submit">Entrar</button>
+        </form>
+    </div>
+</body>
+</html>
